@@ -6,10 +6,8 @@ Authors: Sphere Packing Contributors
 module
 
 public import Mathlib.Analysis.Analytic.IsolatedZeros
-public import Mathlib.Analysis.Calculus.DSlope
-public import Mathlib.Analysis.Complex.RemovableSingularity
-public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 public import SpherePacking.ForMathlib.LaplaceTransform
+public import SpherePacking.ForMathlib.Sinc
 
 /-!
 # Analytic continuation of Laplace transforms with exponential-polynomial growth
@@ -20,8 +18,8 @@ positive imaginary axis, in terms of the Laplace transform `laplace`. Let `g : �
 
 `g t = ∑ k ∈ range (n + 1), cexp (2 * π * k * t) • (a k + t • b k) + h t`,
 
-where the remainder `h` is locally integrable on `[0, ∞)` and `O(exp (-C * t))` at infinity. Then
-for `2 * n < re s`
+where the remainder `h` is locally integrable on `[0, ∞)` and `O(exp (-C * t))` at infinity for
+some `C ≥ 0`. Then for `2 * n < re s`
 
 `laplace g (π * s) =
   ∑ k ∈ range (n + 1), ((π * (s - 2 * k))⁻¹ • a k + ((π * (s - 2 * k)) ^ 2)⁻¹ • b k)
@@ -30,6 +28,12 @@ for `2 * n < re s`
 and `s ↦ laplace h (π * s)` is holomorphic on the half-plane `-C / π < re s`. So the right-hand
 side continues `s ↦ laplace g (π * s)` meromorphically to that half-plane, with at most double poles
 at `s = 2 * k`, `k ≤ n`.
+
+[FGH] take `C > 0`; here `C = 0` is allowed too, since the proofs only use `0 ≤ C` (to place the
+half-plane `2 * n < re s` inside `-C / π < re s`), and the holomorphy statements need no sign
+condition on `C` at all. For `C = 0` the continuation only reaches `0 < re s`. Applications that
+need it at `s = 0`, such as `prop:a-another-integral` and `prop:b-another-integral`, must take
+`C > 0`.
 
 Since `sin (π * s / 2) ^ 2` has double zeros at the even integers, the product of
 `sin (π * s / 2) ^ 2` with the continuation is holomorphic on the whole half-plane. This product,
@@ -171,15 +175,19 @@ section SinSq
 /-- The product of `sin (π * s / 2) ^ 2` with the meromorphic continuation
 `∑ k, ((π * (s - 2 * k))⁻¹ • a k + ((π * (s - 2 * k)) ^ 2)⁻¹ • b k) + laplace h (π * s)`
 of Proposition 2.1 of [FGH], with the removable singularities at `s = 2 * k` filled in.
-Up to the factor `-4` this is the function `U` of [FGH], Proposition 2.2, equation (2.4). -/
+Up to the factor `-4` this is the function `U` of [FGH], Proposition 2.2, equation (2.4).
+
+With `x = π * (s - 2 * k) / 2` we have `sin (π * s / 2) ^ 2 = sin x ^ 2`, so the `k`-th term of the
+principal part, multiplied by `sin (π * s / 2) ^ 2`, is the entire function
+`(sin x * sinc x / 2) • a k + (sinc x ^ 2 / 4) • b k`. -/
 noncomputable def sinSqLaplace (a b : ℕ → E) (n : ℕ) (h : ℝ → E) (s : ℂ) : E :=
-  ∑ k ∈ range (n + 1), ((Complex.sin (π * (s - 2 * k) / 2) * dslope Complex.sin 0
-    (π * (s - 2 * k) / 2) / 2) • a k + (dslope Complex.sin 0 (π * (s - 2 * k) / 2) ^ 2 / 4) • b k) +
+  ∑ k ∈ range (n + 1), ((Complex.sin (π * (s - 2 * k) / 2) * Complex.sinc (π * (s - 2 * k) / 2) /
+    2) • a k + (Complex.sinc (π * (s - 2 * k) / 2) ^ 2 / 4) • b k) +
     Complex.sin (π * s / 2) ^ 2 • laplace h (π * s)
 
 theorem sinSqLaplace_def : sinSqLaplace a b n h = fun s : ℂ ↦
-    ∑ k ∈ range (n + 1), ((Complex.sin (π * (s - 2 * k) / 2) * dslope Complex.sin 0
-    (π * (s - 2 * k) / 2) / 2) • a k + (dslope Complex.sin 0 (π * (s - 2 * k) / 2) ^ 2 / 4) • b k) +
+    ∑ k ∈ range (n + 1), ((Complex.sin (π * (s - 2 * k) / 2) * Complex.sinc (π * (s - 2 * k) / 2) /
+    2) • a k + (Complex.sinc (π * (s - 2 * k) / 2) ^ 2 / 4) • b k) +
     Complex.sin (π * s / 2) ^ 2 • laplace h (π * s) :=
   rfl
 
@@ -191,8 +199,8 @@ theorem sinSqLaplace_eq_of_ne (hs : ∀ k ≤ n, s ≠ 2 * k) : sinSqLaplace a b
   simp only [sinSqLaplace, smul_add, smul_sum, smul_smul]
   refine congrArg₂ (· + ·) (sum_congr rfl fun k hk ↦ ?_) rfl
   have := sub_ne_zero.2 (hs k (mem_range_succ_iff.1 hk))
-  rw [dslope_of_ne _ (by simpa [pi_ne_zero]), slope_def_field, Complex.sin_zero, sub_zero,
-    sub_zero, show π * s / 2 = π * (s - 2 * k) / 2 + k * π by ring,
+  rw [Complex.sinc_of_ne_zero (by simpa [pi_ne_zero]),
+    show π * s / 2 = π * (s - 2 * k) / 2 + k * π by ring,
     Complex.sin_antiperiodic.add_nat_mul_eq, mul_pow, ← pow_mul,
     (even_two.mul_left k).neg_one_pow]
   match_scalars <;> field_simp
@@ -204,11 +212,11 @@ theorem sinSqLaplace_two_mul {k : ℕ} (hk : k ≤ n) :
     sinSqLaplace a b n h (2 * k) = (1 / 4 : ℂ) • b k := by
   rw [sinSqLaplace, show (π : ℂ) * (2 * k) / 2 = k * π by ring, Complex.sin_nat_mul_pi,zero_pow
     two_ne_zero, zero_smul, add_zero, sum_eq_single_of_mem k (mem_range.2 (Nat.lt_succ_of_le hk))]
-  · simp [dslope_same, Complex.deriv_sin]
+  · simp
   · intro j _ hjk
     rw [show (π : ℂ) * (2 * k - 2 * j) / 2 = ((k : ℤ) - j : ℤ) * π by push_cast; ring,
-      dslope_of_ne _ (mul_ne_zero (Int.cast_ne_zero.2 (sub_ne_zero.2 (by exact_mod_cast hjk.symm)))
-      (ofReal_ne_zero.2 pi_ne_zero)), slope_def_field, Complex.sin_int_mul_pi]
+      Complex.sinc_of_ne_zero (mul_ne_zero (Int.cast_ne_zero.2 (sub_ne_zero.2 (by
+      exact_mod_cast hjk.symm))) (ofReal_ne_zero.2 pi_ne_zero)), Complex.sin_int_mul_pi]
     simp
 
 /-- For `2 * n < re s`, the function `sinSqLaplace` is `sin (π * s / 2) ^ 2` times the Laplace
