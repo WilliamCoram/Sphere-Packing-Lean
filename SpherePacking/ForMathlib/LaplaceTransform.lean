@@ -151,8 +151,7 @@ end ExpDecay
 
 section Monomial
 
-private
-theorem isBigO_ofReal_pow_exp (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+private theorem isBigO_ofReal_pow_exp (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
     (fun t : ℝ ↦ (t : ℂ) ^ n) =O[atTop] fun t ↦ rexp (ε * t) := by
   simpa using isBigO_ofReal_left.2 (isLittleO_pow_exp_pos_mul_atTop n hε).isBigO
 
@@ -199,34 +198,33 @@ def LaplaceConvergent (f : ℝ → E) (s : ℂ) : Prop :=
 /-- The Laplace transform of a function `f : ℝ → E` (for a complex normed space `E`), defined as
 the integral of `cexp (-s * t) • f t` over `Ioi 0`. It takes the junk value `0` where the integral
 does not converge absolutely. -/
-noncomputable
-def laplace (f : ℝ → E) (s : ℂ) : E :=
+noncomputable def laplace (f : ℝ → E) (s : ℂ) : E :=
   ∫ t : ℝ in Ioi 0, cexp (-s * t) • f t
 
 theorem LaplaceConvergent.const_smul (hf : LaplaceConvergent f s) {𝕜 : Type*}
     [NormedAddCommGroup 𝕜] [SMulZeroClass 𝕜 E] [IsBoundedSMul 𝕜 E] [SMulCommClass ℂ 𝕜 E] (r : 𝕜) :
-    LaplaceConvergent (fun t ↦ r • f t) s := by
-  simpa only [LaplaceConvergent, smul_comm] using! hf.smul r
+    LaplaceConvergent (r • f) s := by
+  simpa [LaplaceConvergent, smul_comm] using! hf.smul r
 
 theorem LaplaceConvergent.add (hf : LaplaceConvergent f s) (hg : LaplaceConvergent g s) :
-    LaplaceConvergent (fun t ↦ f t + g t) s := by
-  simpa only [LaplaceConvergent, smul_add] using! Integrable.add hf hg
+    LaplaceConvergent (f + g) s := by
+  simpa [LaplaceConvergent, smul_add] using! Integrable.add hf hg
 
 theorem LaplaceConvergent.sub (hf : LaplaceConvergent f s) (hg : LaplaceConvergent g s) :
-    LaplaceConvergent (fun t ↦ f t - g t) s := by
-  simpa only [LaplaceConvergent, smul_sub] using! Integrable.sub hf hg
+    LaplaceConvergent (f - g) s := by
+  simpa [LaplaceConvergent, smul_sub] using! Integrable.sub hf hg
 
 theorem laplace_const_smul (f : ℝ → E) (s : ℂ) {𝕜 : Type*} [RCLike 𝕜] [NormedSpace 𝕜 E]
-    [SMulCommClass ℂ 𝕜 E] (r : 𝕜) : laplace (fun t ↦ r • f t) s = r • laplace f s := by
-  simp only [laplace, smul_comm, integral_smul]
+    [SMulCommClass ℂ 𝕜 E] (r : 𝕜) : laplace (r • f) s = r • laplace f s := by
+  simp [laplace, smul_comm, integral_smul]
 
 theorem laplace_add (hf : LaplaceConvergent f s) (hg : LaplaceConvergent g s) :
-    laplace (fun t ↦ f t + g t) s = laplace f s + laplace g s := by
-  simpa only [laplace, smul_add] using integral_add hf hg
+    laplace (f + g) s = laplace f s + laplace g s := by
+  simpa [laplace, smul_add] using integral_add hf hg
 
 theorem laplace_sub (hf : LaplaceConvergent f s) (hg : LaplaceConvergent g s) :
-    laplace (fun t ↦ f t - g t) s = laplace f s - laplace g s := by
-  simpa only [laplace, smul_sub] using integral_sub hf hg
+    laplace (f - g) s = laplace f s - laplace g s := by
+  simpa [laplace, smul_sub] using integral_sub hf hg
 
 /-- If `f` is locally integrable on `[0, ∞)` and `O(exp (a * t))` at infinity, then its Laplace
 integral converges absolutely on the half-plane `a < re s`. -/
@@ -268,12 +266,12 @@ theorem laplace_analyticOnNhd_of_isBigO_exp [CompleteSpace E] (hf : LocallyInteg
 
 /-- The Laplace integral of `t ↦ t ^ n` converges absolutely on the half-plane `0 < re s`. -/
 theorem laplaceConvergent_pow (n : ℕ) {s : ℂ} (hs : 0 < s.re) :
-    LaplaceConvergent (fun t : ℝ ↦ (t : ℂ) ^ n) s := by
+    LaplaceConvergent (ofReal ^ n) s := by
   simpa [LaplaceConvergent, mul_comm] using integrableOn_pow_mul_cexp_neg_mul_Ioi n hs 0
 
 /-- The Laplace transform of `t ↦ t ^ n` is `n ! / s ^ (n + 1)` on the half-plane `0 < re s`. -/
 theorem laplace_pow (n : ℕ) {s : ℂ} (hs : 0 < s.re) :
-    laplace (fun t : ℝ ↦ (t : ℂ) ^ n) s = n ! / s ^ (n + 1) := by
+    laplace (ofReal ^ n) s = n ! / s ^ (n + 1) := by
   simpa [laplace, mul_comm] using integral_pow_mul_cexp_neg_mul_Ioi n hs
 
 end Laplace

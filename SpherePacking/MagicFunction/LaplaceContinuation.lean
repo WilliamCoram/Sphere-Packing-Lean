@@ -92,8 +92,7 @@ end Remainder
 
 section MainTerm
 
-private
-theorem sum_smul_eq_cexp_smul_sum (a b : ℕ → E) (n : ℕ) (s : ℂ) (t : ℝ) :
+private theorem sum_smul_eq_cexp_smul_sum (a b : ℕ → E) (n : ℕ) (s : ℂ) (t : ℝ) :
     ∑ k ∈ range (n + 1), (cexp (-(π * (s - 2 * k)) * t) • a k +
         (t * cexp (-(π * (s - 2 * k)) * t)) • b k) =
       cexp (-(π * s) * t) • ∑ k ∈ range (n + 1), cexp (2 * π * k * t) • (a k + (t : ℂ) • b k) := by
@@ -102,9 +101,8 @@ theorem sum_smul_eq_cexp_smul_sum (a b : ℕ → E) (n : ℕ) (s : ℂ) (t : ℝ
   rw [smul_smul, ← Complex.exp_add, smul_add, smul_smul, mul_comm (cexp _) t]
   ring_nf
 
-private
-theorem re_pi_mul_sub_pos (hs : 2 * n < s.re) {k : ℕ} (hk : k ∈ range (n + 1)) :
-    0 < ((π : ℂ) * (s - 2 * k)).re := by
+private theorem re_pi_mul_sub_pos (hs : 2 * n < s.re) {k : ℕ} (hk : k ∈ range (n + 1)) :
+    0 < (π * (s - 2 * k)).re := by
   rw [re_ofReal_mul]
   exact mul_pos pi_pos (by simp; linarith [(Nat.cast_le (α := ℝ)).2 (mem_range_succ_iff.1 hk)])
 
@@ -151,7 +149,7 @@ theorem laplaceConvergent_pi_mul (hh : LocallyIntegrableOn h (Ici 0))
   IntegrableOn.congr_fun ((laplaceConvergent_pi_mul_sum (a := a) (b := b) hs).add
     (laplaceConvergent_pi_mul_of_isBigO hh hO ((div_nonpos_of_nonpos_of_nonneg (neg_nonpos.2 hC)
     pi_pos.le).trans_lt ((by positivity : (0 : ℝ) ≤ 2 * n).trans_lt hs))))
-    (fun t ht ↦ by simp only [hgh t ht]) measurableSet_Ioi
+    (fun t ht ↦ by simp only [hgh t ht, Pi.add_apply]) measurableSet_Ioi
 
 
 /-- **Proposition 2.1 of [FGH]**: for `2 * n < re s` the Laplace transform of `g`
@@ -164,7 +162,7 @@ theorem laplace_pi_mul_eq_sum_add [CompleteSpace E] (hh : LocallyIntegrableOn h 
   rw [← laplace_pi_mul_sum hs, ← laplace_add (laplaceConvergent_pi_mul_sum hs)
     (laplaceConvergent_pi_mul_of_isBigO hh hO ((div_nonpos_of_nonpos_of_nonneg (neg_nonpos.2 hC)
     pi_pos.le).trans_lt ((by positivity : (0 : ℝ) ≤ 2 * n).trans_lt hs)))]
-  exact setIntegral_congr_fun measurableSet_Ioi fun t ht ↦ by simp only [hgh t ht]
+  exact setIntegral_congr_fun measurableSet_Ioi fun t ht ↦ by simp only [hgh t ht, Pi.add_apply]
 
 end Continuation
 
@@ -174,8 +172,7 @@ section SinSq
 `∑ k, ((π * (s - 2 * k))⁻¹ • a k + ((π * (s - 2 * k)) ^ 2)⁻¹ • b k) + laplace h (π * s)`
 of Proposition 2.1 of [FGH], with the removable singularities at `s = 2 * k` filled in.
 Up to the factor `-4` this is the function `U` of [FGH], Proposition 2.2, equation (2.4). -/
-noncomputable
-def sinSqLaplace (a b : ℕ → E) (n : ℕ) (h : ℝ → E) (s : ℂ) : E :=
+noncomputable def sinSqLaplace (a b : ℕ → E) (n : ℕ) (h : ℝ → E) (s : ℂ) : E :=
   ∑ k ∈ range (n + 1), ((Complex.sin (π * (s - 2 * k) / 2) * dslope Complex.sin 0
     (π * (s - 2 * k) / 2) / 2) • a k + (dslope Complex.sin 0 (π * (s - 2 * k) / 2) ^ 2 / 4) • b k) +
     Complex.sin (π * s / 2) ^ 2 • laplace h (π * s)
@@ -195,7 +192,7 @@ theorem sinSqLaplace_eq_of_ne (hs : ∀ k ≤ n, s ≠ 2 * k) : sinSqLaplace a b
   refine congrArg₂ (· + ·) (sum_congr rfl fun k hk ↦ ?_) rfl
   have := sub_ne_zero.2 (hs k (mem_range_succ_iff.1 hk))
   rw [dslope_of_ne _ (by simpa [pi_ne_zero]), slope_def_field, Complex.sin_zero, sub_zero,
-    sub_zero, show (π : ℂ) * s / 2 = π * (s - 2 * k) / 2 + k * π by ring,
+    sub_zero, show π * s / 2 = π * (s - 2 * k) / 2 + k * π by ring,
     Complex.sin_antiperiodic.add_nat_mul_eq, mul_pow, ← pow_mul,
     (even_two.mul_left k).neg_one_pow]
   match_scalars <;> field_simp
@@ -209,7 +206,7 @@ theorem sinSqLaplace_two_mul {k : ℕ} (hk : k ≤ n) :
     two_ne_zero, zero_smul, add_zero, sum_eq_single_of_mem k (mem_range.2 (Nat.lt_succ_of_le hk))]
   · simp [dslope_same, Complex.deriv_sin]
   · intro j _ hjk
-    rw [show (π : ℂ) * (2 * k - 2 * j) / 2 = (((k : ℤ) - j : ℤ) : ℂ) * π by push_cast; ring,
+    rw [show (π : ℂ) * (2 * k - 2 * j) / 2 = ((k : ℤ) - j : ℤ) * π by push_cast; ring,
       dslope_of_ne _ (mul_ne_zero (Int.cast_ne_zero.2 (sub_ne_zero.2 (by exact_mod_cast hjk.symm)))
       (ofReal_ne_zero.2 pi_ne_zero)), slope_def_field, Complex.sin_int_mul_pi]
     simp
