@@ -63,7 +63,7 @@ theorem integral_eq_sum_add_integral_sub (hC : 0 < C) (hs : 2 * n < s.re)
     (hloc : LocallyIntegrableOn (fun t : ℝ ↦ ψ (I * t)) (Ici 0))
     (hexp : (fun t : ℝ ↦ ψ (I * t) - expPoly n a b t) =O[atTop] fun t ↦ rexp (-C * t)) :
     ∫ t in Ioi (0 : ℝ), ψ (I * t) * cexp (-π * s * t) =
-      ∑ k ∈ Finset.range (n + 1), (a k / (π * (s - 2 * k)) + b k / (π ^ 2 * (s - 2 * k) ^ 2)) +
+      ∑ k ∈ range (n + 1), (a k / (π * (s - 2 * k)) + b k / (π ^ 2 * (s - 2 * k) ^ 2)) +
         ∫ t in Ioi (0 : ℝ), (ψ (I * t) - expPoly n a b t) * cexp (-π * s * t) := by
   sorry
 
