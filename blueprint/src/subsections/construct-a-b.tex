@@ -442,7 +442,7 @@ In particular, fix a vertical strip $x_1 \leq \Re z \leq x_2$ and let $s > 2$. B
 
 \begin{proposition}
 \label{prop:a-double-zeros}
-\uses{cor:phi0-near-0-infty, def:a-definition, cor:disc-nonvanishing, lem:CG-unbounded}
+\uses{cor:phi0-near-0-infty, def:a-definition, cor:disc-nonvanishing, lem:CG-unbounded}\lean{MagicFunction.integrableOn_φ₀''_I_div_mul_sq_mul_cexp, MagicFunction.a'_eq_four_mul_I_mul_sin_sq_mul_integral, MagicFunction.a_eq_four_mul_I_mul_sin_sq_mul_integral}\leanok
 For $s>2$ we can express $a_\rad(s)$ in the following form
 \begin{equation}\label{eqn: a double zeroes}
     a_\rad(s)=4i\sin(\pi s/2)^2\,\int\limits_{0}^{\infty}\phi_0\Big(\frac{i}{t}\Big)\,t^2\,e^{-\pi s \,t}\,dt.
@@ -518,7 +518,7 @@ t^2\,\phi_0(i/t) = \frac{36}{\pi^2}\,e^{2\pi t} + \frac{36 \cdot 504}{\pi^2} - \
 which is \eqref{eqn: phi asymptotic}.
 \end{proof}
 
-\begin{proposition}\label{prop:a-another-integral}\uses{prop:a-double-zeros, def:a-definition, lemma:phi0-asymptotic, prop:laplace-continuation, prop:sinsq-laplace-continuation, cor:phi0-near-0-infty}
+\begin{proposition}\label{prop:a-another-integral}\uses{prop:a-double-zeros, def:a-definition, lemma:phi0-asymptotic, prop:laplace-continuation, prop:sinsq-laplace-continuation, cor:phi0-near-0-infty}\lean{MagicFunction.integrableOn_φ₀''_I_div_mul_sq_sub_mul_cexp, MagicFunction.a'_eq_four_mul_I_mul_U, MagicFunction.a_eq_four_mul_I_mul_U}\leanok
 For $s\geq0$ we have
 \begin{align}\label{eqn:a-another-integral}a_\rad(s)=&4i\,\sin(\pi s/2)^2\,\Bigg(\frac{36}{\pi^3\,(s-2)}-\frac{8640}{\pi^3\,s^2}+\frac{18144}{\pi^3\,s}\\ +&\int\limits_0^\infty\,\left(t^2\,\phi_0\Big(\frac{i}{t}\Big)-\frac{36}{\pi^2}\,e^{2\pi t}+\frac{8640}{\pi}\,t-\frac{18144}{\pi^2}\right)\,e^{-\pi s t}\,dt \Bigg) .\notag\end{align}
 The integral converges absolutely for all $s\in\R_{\geq 0}$.

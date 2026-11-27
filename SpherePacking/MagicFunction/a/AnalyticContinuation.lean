@@ -60,18 +60,53 @@ theorem φ₀''_sub_expPoly_isBigO_atTop :
   refine (φ₀''_I_div_mul_sq_sub_isBigO_atTop.trans h).congr_left fun t ↦ ?_
   rw [neg_sq_mul_φ₀''_neg_inv_I_mul, expPoly_φ₀'']
 
-theorem a'_sq_eq_regularized_integral {r : ℝ} (hr : 0 ≤ r) :
-    let f : ℝ → ℂ := fun t =>
-      (φ₀'' (I / (t : ℂ)) * (t : ℂ) ^ 2 -
-        ((36 / π ^ 2 * Real.exp (2 * π * t) -
-          8640 / π * t + 18144 / π ^ 2 : ℝ) : ℂ)) *
-        cexp ((-π * r ^ 2 * t : ℝ) : ℂ)
-    IntegrableOn f (Ioi (0 : ℝ)) ∧
-      MagicFunction.a.RealIntegrals.a' (r ^ 2) =
-        (I / (π : ℂ)) *
-          ((36 * (r ^ 2 - 2) * Real.sinc (π * r ^ 2 / 2 - π) ^ 2 +
-            (18144 * r ^ 2 - 8640) * Real.sinc (π * r ^ 2 / 2) ^ 2 : ℝ) : ℂ) +
-        4 * I * (Real.sin (π * r ^ 2 / 2) : ℂ) ^ 2 *
-                  (∫ t : ℝ in Ioi (0 : ℝ), f t) := by sorry
+/-- The integral in Proposition 7.20 converges absolutely for `s > 2`. -/
+theorem integrableOn_φ₀''_I_div_mul_sq_mul_cexp {s : ℝ} (hs : 2 < s) :
+    IntegrableOn (fun t : ℝ ↦ φ₀'' (I / t) * t ^ 2 * cexp (-π * s * t)) (Ioi 0) := by
+  refine (integrableOn_mul_cexp (ψ := fun z ↦ -z ^ 2 * φ₀'' (-1 / z)) (s := s) pi_pos ?_
+    locallyIntegrableOn_φ₀'' φ₀''_sub_expPoly_isBigO_atTop).congr_fun
+      (fun t _ ↦ by simp only [neg_sq_mul_φ₀''_neg_inv_I_mul]) measurableSet_Ioi
+  simpa using hs
+
+/-- Proposition 7.20: `a(s) = 4i sin(πs/2)² ∫₀^∞ φ₀(i/t) t² e^{-πst} dt` for `s > 2`. -/
+theorem a'_eq_four_mul_I_mul_sin_sq_mul_integral {s : ℝ} (hs : 2 < s) :
+    a.RealIntegrals.a' s = 4 * I * (Real.sin (π * s / 2) : ℂ) ^ 2 *
+      ∫ t in Ioi (0 : ℝ), φ₀'' (I / t) * t ^ 2 * cexp (-π * s * t) := by
+  sorry
+
+theorem a_eq_four_mul_I_mul_sin_sq_mul_integral {x : EuclideanSpace ℝ (Fin 8)} (hx : √2 < ‖x‖) :
+    FourierEigenfunctions.a x = 4 * I * (Real.sin (π * ‖x‖ ^ 2 / 2) : ℂ) ^ 2 *
+      ∫ t in Ioi (0 : ℝ), φ₀'' (I / t) * t ^ 2 * cexp (-π * ‖x‖ ^ 2 * t) := by
+  rw [FourierEigenfunctions.a_apply,
+    a'_eq_four_mul_I_mul_sin_sq_mul_integral (lt_sq_of_sqrt_lt hx)]
+  norm_num
+
+/-- The integral in Proposition 7.21 converges absolutely for `s ≥ 0`. -/
+theorem integrableOn_φ₀''_I_div_mul_sq_sub_mul_cexp {s : ℝ} (hs : 0 ≤ s) :
+    IntegrableOn (fun t : ℝ ↦ (φ₀'' (I / t) * t ^ 2 -
+      (36 / π ^ 2 * cexp (2 * π * t) - 8640 / π * t + 18144 / π ^ 2)) * cexp (-π * s * t))
+        (Ioi 0) := by
+  refine (integrableOn_sub_expPoly_mul_cexp (ψ := fun z ↦ -z ^ 2 * φ₀'' (-1 / z)) (s := s) ?_
+    locallyIntegrableOn_φ₀'' φ₀''_sub_expPoly_isBigO_atTop).congr_fun
+      (fun t _ ↦ by simp only [neg_sq_mul_φ₀''_neg_inv_I_mul, expPoly_φ₀'']) measurableSet_Ioi
+  rw [neg_div, div_self pi_ne_zero, ofReal_re]
+  linarith
+
+/-- Proposition 7.21: for `s ≥ 0`,
+`a(s) = 4i sin(πs/2)² (36/(π³(s - 2)) - 8640/(π³s²) + 18144/(π³s) + ∫₀^∞ (t² φ₀(i/t)`
+`- 36/π² e^{2πt} + 8640/π t - 18144/π²) e^{-πst} dt)`, with the removable singularities at
+`s = 0, 2` removed. In the notation of FGH Proposition 2.2, the right hand side is `4i U(s)` for
+`ψ(z) = -z² φ₀(-1/z)`. -/
+theorem a'_eq_four_mul_I_mul_U {s : ℝ} (hs : 0 ≤ s) :
+    a.RealIntegrals.a' s = 4 * I * U (fun z ↦ -z ^ 2 * φ₀'' (-1 / z)) 1
+      (fun k ↦ if k = 0 then 18144 / π ^ 2 else 36 / π ^ 2)
+      (fun k ↦ if k = 0 then -8640 / π else 0) s := by
+  sorry
+
+theorem a_eq_four_mul_I_mul_U (x : EuclideanSpace ℝ (Fin 8)) :
+    FourierEigenfunctions.a x = 4 * I * U (fun z ↦ -z ^ 2 * φ₀'' (-1 / z)) 1
+      (fun k ↦ if k = 0 then 18144 / π ^ 2 else 36 / π ^ 2)
+      (fun k ↦ if k = 0 then -8640 / π else 0) (‖x‖ ^ 2 : ℝ) := by
+  rw [FourierEigenfunctions.a_apply, a'_eq_four_mul_I_mul_U (by positivity)]
 
 end MagicFunction
