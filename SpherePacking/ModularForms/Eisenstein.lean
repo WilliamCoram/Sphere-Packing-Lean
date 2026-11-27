@@ -148,7 +148,7 @@ lemma sigma_qexp_summable_generic (a b : ℕ) (z : ℍ) :
 lemma sigma_qexp_deriv_bound_generic (k : ℕ) :
     ∀ K : Set ℂ, K ⊆ {w : ℂ | 0 < w.im} → IsCompact K →
       ∃ u : ℕ+ → ℝ, Summable u ∧ ∀ (n : ℕ+) (z : K),
-        ‖(σ k n : ℂ) * (2 * π * Complex.I * n) * cexp (2 * π * Complex.I * n * z.1)‖ ≤ u n := by
+        ‖(σ k n : ℂ) * (2 * π * Complex.I * n) * cexp (2 * π * Complex.I * n * z.val)‖ ≤ u n := by
   intro K hK hKc
   obtain ⟨u₀, hu₀_sum, hu₀_bound⟩ := iter_deriv_comp_bound3 K hK hKc (k + 2)
   refine ⟨fun n ↦ u₀ n, hu₀_sum.subtype _, fun n z ↦ le_trans ?_ (hu₀_bound n z)⟩
@@ -168,7 +168,15 @@ lemma E₂_sigma_qexp (z : ℍ) :
 lemma E₄_sigma_qexp (z : ℍ) :
     E₄ z = 1 + 240 * ∑' (n : ℕ+), (σ 3 n : ℂ) * cexp (2 * π * Complex.I * n * z) := by
   refine (EisensteinSeries.q_expansion_bernoulli (by norm_num : 3 ≤ 4) (by decide) z).trans ?_
-  norm_num [bernoulli, bernoulli'_four, ← Complex.exp_natCast_mul, mul_comm, mul_assoc, mul_left_comm]
+  norm_num [bernoulli, bernoulli'_four, ← Complex.exp_natCast_mul, mul_comm, mul_assoc,
+    mul_left_comm]
+
+/-- `E₆ = 1 - 504 ∑' n : ℕ+, σ₅ n qⁿ`. -/
+lemma E₆_sigma_qexp (z : ℍ) :
+    E₆ z = 1 - 504 * ∑' (n : ℕ+), (σ 5 n : ℂ) * cexp (2 * π * Complex.I * n * z) := by
+  refine (EisensteinSeries.q_expansion_bernoulli (by norm_num : 3 ≤ 6) (by decide) z).trans ?_
+  norm_num [bernoulli, bernoulli'_six, ← Complex.exp_natCast_mul, mul_comm, mul_assoc,
+    mul_left_comm]
 
 /-! ## Realness on the imaginary axis -/
 

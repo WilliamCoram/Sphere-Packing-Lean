@@ -66,6 +66,7 @@ public import SpherePacking.ModularForms.JacobiTheta.Defs
 public import SpherePacking.ModularForms.JacobiTheta.Derivative
 public import SpherePacking.ModularForms.JacobiTheta.JacobiIdentity
 public import SpherePacking.ModularForms.JacobiTheta.MDifferentiable
+public import SpherePacking.ModularForms.PhiAsymptotics
 public import SpherePacking.ModularForms.PhiTransform
 public import SpherePacking.ModularForms.QExpansion
 public import SpherePacking.ModularForms.ResToImagAxis
