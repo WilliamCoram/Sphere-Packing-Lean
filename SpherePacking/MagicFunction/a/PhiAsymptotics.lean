@@ -26,8 +26,9 @@ These are the inputs, via the `S`-transformation `φ₀_S_transform`, to the asy
 
 The proof follows the blueprint: from `E₄ = 1 + 240q + 2160q² + O(q³)` and
 `E₆ = 1 - 504q - 16632q² + O(q³)` (`E₄_sub_isBigO`, `E₆_sub_isBigO`),
-`E₂E₄ - E₆ = 720q + O(q²)` (`E₂_mul_E₄_sub_E₆_sub_isBigO`) and `1728 Δ = E₄³ - E₆²`, the
-numerators `E₄(E₂E₄ - E₆) - 720Δ` and `E₄² - (q⁻¹ + 504)Δ` are `O(q²)`, while `Δ⁻¹ = O(q⁻¹)`.
+`E₂E₄ - E₆ = 720q + O(q²)` (`E₂_mul_E₄_sub_E₆_sub_isBigO`) and `1728 Δ = E₄³ - E₆²`, we get
+`Δ = q - 24q² + O(q³)`, so the numerators `E₄(E₂E₄ - E₆) - 720Δ` and `E₄² - (q⁻¹ + 504)Δ` are
+`O(q²)`, while `Δ⁻¹ = O(q⁻¹)`.
 -/
 
 @[expose] public section
@@ -54,6 +55,33 @@ private lemma tendsto_of_sub_isBigO (hq : Tendsto q l (𝓝 0)) {f p : α → �
     Tendsto f l (𝓝 c) := by
   simpa using (hf.trans_tendsto (by simpa [zero_pow hn] using hq.pow n)).add hp
 
+/-- `qᵐ = O(qⁿ)` for `n ≤ m` when `q → 0`. -/
+private lemma pow_isBigO_pow (hq : Tendsto q l (𝓝 0)) {m n : ℕ} (h : n ≤ m) :
+    (fun x ↦ q x ^ m) =O[l] fun x ↦ q x ^ n := by
+  obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le h
+  simpa [pow_add] using (isBigO_refl (fun x ↦ q x ^ n) l).mul ((hq.pow k).isBigO_one ℂ)
+
+/-- `d = q - 24 q² + O(q³)`. -/
+private lemma disc_sub_isBigO (hq : Tendsto q l (𝓝 0))
+    (h4 : (fun x ↦ e₄ x - (1 + 240 * q x + 2160 * q x ^ 2)) =O[l] fun x ↦ q x ^ 3)
+    (h6 : (fun x ↦ e₆ x - (1 - 504 * q x - 16632 * q x ^ 2)) =O[l] fun x ↦ q x ^ 3)
+    (hd : ∀ x, 1728 * d x = e₄ x ^ 3 - e₆ x ^ 2) :
+    (fun x ↦ d x - (q x - 24 * q x ^ 2)) =O[l] fun x ↦ q x ^ 3 := by
+  have hP₄ := ((hq.const_mul 240).const_add 1).add ((hq.pow 2).const_mul 2160)
+  have hP₆ := ((hq.const_mul 504).const_sub 1).sub ((hq.pow 2).const_mul 16632)
+  have he₄ := tendsto_of_sub_isBigO hq (by norm_num) hP₄ h4
+  have he₆ := tendsto_of_sub_isBigO hq (by norm_num) hP₆ h6
+  -- `e₄³ - e₆² = (e₄ - P₄) A - (e₆ - P₆) B + (P₄³ - P₆²)`, and
+  -- `P₄³ - P₆² = 1728 (q - 24 q²) + q³ Q`
+  have hA := (((he₄.pow 2).add (he₄.mul hP₄)).add (hP₄.pow 2)).isBigO_one ℂ
+  have hB := (he₆.add hP₆).isBigO_one ℂ
+  have hQ := ((Continuous.tendsto (f := fun w : ℂ ↦ 169344 + 110621376 * w + 3359232000 * w ^ 2
+    + 10077696000 * w ^ 3) (by fun_prop) 0).comp hq).isBigO_one ℂ
+  refine ((((h4.mul hA).sub (h6.mul hB)).add ((isBigO_refl (fun x ↦ q x ^ 3) l).mul hQ)
+    ).const_mul_left (1728⁻¹ : ℂ)).congr (fun x ↦ ?_) fun x ↦ by simp
+  simp only [Function.comp_apply]
+  linear_combination (-1728⁻¹ : ℂ) * hd x
+
 /-- `e₄ f₁ / d = 720 + O(q)`. -/
 private lemma mul_div_sub_isBigO (hq : Tendsto q l (𝓝 0))
     (h4 : (fun x ↦ e₄ x - (1 + 240 * q x + 2160 * q x ^ 2)) =O[l] fun x ↦ q x ^ 3)
@@ -62,26 +90,17 @@ private lemma mul_div_sub_isBigO (hq : Tendsto q l (𝓝 0))
     (hd : ∀ x, 1728 * d x = e₄ x ^ 3 - e₆ x ^ 2) (hd0 : ∀ x, d x ≠ 0)
     (hdinv : (fun x ↦ (d x)⁻¹) =O[l] fun x ↦ (q x)⁻¹) (hq0 : ∀ x, q x ≠ 0) :
     (fun x ↦ e₄ x * f₁ x / d x - 720) =O[l] q := by
-  -- `e₄ f₁ / d - 720 = M / (1728 d)` and `d⁻¹ = O(q⁻¹)`, so it suffices that
-  -- `M = 1728 e₄ f₁ - 720 (e₄³ - e₆²) = O(q²)`
-  refine (((?_ : (fun x ↦ 1728 * e₄ x * f₁ x - 720 * (e₄ x ^ 3 - e₆ x ^ 2)) =O[l]
-    fun x ↦ q x ^ 2).mul hdinv).const_mul_left (1728⁻¹ : ℂ)).congr
-      (fun x ↦ by rw [← hd x]; field_simp [hd0 x]) fun x ↦ by field_simp [hq0 x]
-  -- `M = q² Q + (e₄ - P₄) A + (f₁ - 720q) B + (e₆ - P₆) C`, where `P₄`, `P₆` are the polynomial
-  -- parts of `e₄`, `e₆`, and the factors `Q`, `A`, `B`, `C` converge, so are bounded
+  -- since `d⁻¹ = O(q⁻¹)`, it suffices that `e₄ f₁ - 720 d = O(q²)`
+  refine ((?_ : (fun x ↦ e₄ x * f₁ x - 720 * d x) =O[l] fun x ↦ q x ^ 2).mul hdinv).congr
+    (fun x ↦ by field_simp [hd0 x]) fun x ↦ by field_simp [hq0 x]
+  have h32 := pow_isBigO_pow hq (show 2 ≤ 3 by norm_num)
   have hP₄ := ((hq.const_mul 240).const_add 1).add ((hq.pow 2).const_mul 2160)
-  have hP₆ := ((hq.const_mul 504).const_sub 1).sub ((hq.pow 2).const_mul 16632)
-  have he₄ := tendsto_of_sub_isBigO hq (by norm_num) hP₄ h4
-  have hQ := (((((hq.const_mul 2565457920).const_add 328458240).sub
-    ((hq.pow 2).const_mul 79647390720)).sub ((hq.pow 3).const_mul 2418647040000)).sub
-      ((hq.pow 4).const_mul 7255941120000)).isBigO_one ℂ
-  have hA := (((tendsto_of_sub_isBigO hq (by norm_num) (hq.const_mul 720) h1).const_mul 1728).sub
-    ((((he₄.pow 2).add (he₄.mul hP₄)).add (hP₄.pow 2)).const_mul 720)).isBigO_one ℂ
-  have hB := (hP₄.const_mul 1728).isBigO_one ℂ
-  have hC := (((tendsto_of_sub_isBigO hq (by norm_num) hP₆ h6).add hP₆).const_mul 720).isBigO_one ℂ
-  have h32 := (isLittleO_pow_pow (𝕜 := ℂ) (by norm_num : 2 < 3)).isBigO.comp_tendsto hq
-  refine (((((isBigO_refl (fun x ↦ q x ^ 2) l).mul hQ).add ((h4.trans h32).mul hA)).add
-    ((h1.mul hB).add ((h6.trans h32).mul hC))).congr (fun x ↦ ?_) fun x ↦ mul_one _)
+  have hf₁ := (tendsto_of_sub_isBigO hq two_ne_zero (hq.const_mul 720) h1).isBigO_one ℂ
+  have hQ := ((hq.const_mul 1555200).const_add 190080).isBigO_one ℂ
+  -- `e₄ f₁ - 720 d = (e₄ - P₄) f₁ + (f₁ - 720 q) P₄ - 720 (d - (q - 24 q²)) + q² Q`
+  refine (((((h4.trans h32).mul hf₁).add (h1.mul (hP₄.isBigO_one ℂ))).sub
+    (((disc_sub_isBigO hq h4 h6 hd).trans h32).mul (isBigO_const_one ℂ (720 : ℂ) l))).add
+      ((isBigO_refl (fun x ↦ q x ^ 2) l).mul hQ)).congr (fun x ↦ ?_) fun x ↦ by simp
   ring
 
 /-- `e₄² / d = q⁻¹ + 504 + O(q)`. -/
@@ -91,26 +110,19 @@ private lemma sq_div_sub_isBigO (hq : Tendsto q l (𝓝 0))
     (hd : ∀ x, 1728 * d x = e₄ x ^ 3 - e₆ x ^ 2) (hd0 : ∀ x, d x ≠ 0)
     (hdinv : (fun x ↦ (d x)⁻¹) =O[l] fun x ↦ (q x)⁻¹) (hq0 : ∀ x, q x ≠ 0) :
     (fun x ↦ e₄ x ^ 2 / d x - (q x)⁻¹ - 504) =O[l] q := by
-  -- `e₄² / d - q⁻¹ - 504 = N / (1728 q d)` and `(q d)⁻¹ = O(q⁻²)`, so it suffices that
-  -- `N = 1728 q e₄² - (1 + 504q) (e₄³ - e₆²) = O(q³)`
-  refine (((?_ : (fun x ↦ 1728 * q x * e₄ x ^ 2 - (1 + 504 * q x) * (e₄ x ^ 3 - e₆ x ^ 2))
-    =O[l] fun x ↦ q x ^ 3).mul ((isBigO_refl (fun x ↦ (q x)⁻¹) l).mul hdinv)).const_mul_left
-      (1728⁻¹ : ℂ)).congr (fun x ↦ by rw [← hd x]; field_simp [hd0 x, hq0 x]; ring)
-        fun x ↦ by field_simp [hq0 x]
-  -- `N = q³ Q + (e₄ - P₄) A + (e₆ - P₆) B`, where `P₄`, `P₆` are the polynomial parts of `e₄`,
-  -- `e₆`, and the factors `Q`, `A`, `B` converge, so are bounded
+  -- since `(q d)⁻¹ = O(q⁻²)`, it suffices that `q e₄² - (1 + 504 q) d = O(q³)`
+  refine ((?_ : (fun x ↦ q x * e₄ x ^ 2 - (1 + 504 * q x) * d x) =O[l] fun x ↦ q x ^ 3).mul
+    ((isBigO_refl (fun x ↦ (q x)⁻¹) l).mul hdinv)).congr
+      (fun x ↦ by field_simp [hd0 x, hq0 x]; ring) fun x ↦ by field_simp [hq0 x]
   have hP₄ := ((hq.const_mul 240).const_add 1).add ((hq.pow 2).const_mul 2160)
-  have hP₆ := ((hq.const_mul 504).const_sub 1).sub ((hq.pow 2).const_mul 16632)
   have he₄ := tendsto_of_sub_isBigO hq (by norm_num) hP₄ h4
-  have hP := (hq.const_mul 504).const_add 1
-  have hQ := (((((hq.const_mul 1595619648).const_add 127730304).sub
-    ((hq.pow 2).const_mul 51050248704)).sub ((hq.pow 3).const_mul 1703130624000)).sub
-      ((hq.pow 4).const_mul 5079158784000)).isBigO_one ℂ
-  have hA := ((((hq.const_mul 1728).mul (he₄.add hP₄))).sub
-    (hP.mul (((he₄.pow 2).add (he₄.mul hP₄)).add (hP₄.pow 2)))).isBigO_one ℂ
-  have hB := (hP.mul ((tendsto_of_sub_isBigO hq (by norm_num) hP₆ h6).add hP₆)).isBigO_one ℂ
-  refine ((((isBigO_refl (fun x ↦ q x ^ 3) l).mul hQ).add (h4.mul hA)).add (h6.mul hB)).congr
-    (fun x ↦ ?_) fun x ↦ mul_one _
+  have hA := ((he₄.add hP₄).mul hq).isBigO_one ℂ
+  have hB := ((hq.const_mul 504).const_add 1).isBigO_one ℂ
+  have hQ := (((hq.const_mul 1036800).const_add 74016).add
+    ((hq.pow 2).const_mul 4665600)).isBigO_one ℂ
+  -- `q e₄² - (1 + 504 q) d = (e₄ - P₄) (e₄ + P₄) q - (d - (q - 24 q²)) (1 + 504 q) + q³ Q`
+  refine (((h4.mul hA).sub ((disc_sub_isBigO hq h4 h6 hd).mul hB)).add
+    ((isBigO_refl (fun x ↦ q x ^ 3) l).mul hQ)).congr (fun x ↦ ?_) fun x ↦ by simp
   ring
 
 end PhiAsymptotics
