@@ -59,9 +59,10 @@ lemma tendsto_nat (a : ℕ → ℂ) (ha : Summable fun n : ℕ ↦ ‖a n‖ * r
 /-- A `q`-series whose coefficients are summable against `e^{-2πm}` differs from its partial
 sum of length `N` by `O(qᴺ)` at `i∞`. -/
 lemma isBigO_tsum_sub_sum_range {a : ℕ → ℂ} (ha : Summable fun m : ℕ ↦ ‖a m‖ * rexp (-2 * π * m))
-    (N : ℕ) : (fun z : ℍ ↦ ∑' m : ℕ, a m * cexp (2 * π * I * m * z) -
-    ∑ m ∈ Finset.range N, a m * cexp (2 * π * I * m * z)) =O[atImInfty]
-    fun z ↦ cexp (2 * π * I * z) ^ N := by
+    (N : ℕ) :
+      (fun z : ℍ ↦ ∑' m : ℕ, a m * cexp (2 * π * I * m * z) -
+        ∑ m ∈ Finset.range N, a m * cexp (2 * π * I * m * z)) =O[atImInfty]
+          fun z ↦ cexp (2 * π * I * z) ^ N := by
   refine .of_bound (∑' m : ℕ, ‖a (m + N)‖ * rexp (-(2 * π * 1) * m)) <|
     eventually_atImInfty.mpr ⟨1, fun z hz ↦ ?_⟩
   have hsum : Summable fun m : ℕ ↦ a m * cexp (2 * π * I * m * z) :=
