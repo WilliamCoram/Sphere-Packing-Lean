@@ -9,7 +9,7 @@ public import SpherePacking.MagicFunction.AnalyticContinuation
 public import SpherePacking.MagicFunction.a.Schwartz
 
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
-import SpherePacking.MagicFunction.a.Integrability.ComplexIntegrands
+import SpherePacking.MagicFunction.a.Integrability.CuspPath
 import SpherePacking.ModularForms.PhiAsymptotics
 
 /-!
@@ -65,34 +65,19 @@ theorem neg_sq_mul_φ₀''_neg_inv_I_mul (t : ℝ) :
 /-- `t ↦ ψ(it)` is locally integrable on `[0, ∞)`, for `ψ(z) = -z² φ₀(-1/z)`. -/
 theorem locallyIntegrableOn_φ₀'' :
     LocallyIntegrableOn (fun t : ℝ ↦ -(I * t) ^ 2 * φ₀'' (-1 / (I * t))) (Ici 0) := by
-  -- it is continuous on `[0, ∞)`
   refine ContinuousOn.locallyIntegrableOn (fun t ht ↦ ?_) measurableSet_Ici
   rcases (mem_Ici.mp ht).eq_or_lt with rfl | ht
-  · -- at `0` it vanishes, and `t² φ₀(i/t) → 0` as `t → 0⁺` since `φ₀ → 0` at `i∞`
-    rw [← continuousWithinAt_Ioi_iff_Ici]
-    have hφ₀ := (tendsto_resToImagAxis_of_tendsto_atImInfty (φ₀_isBigO_atImInfty.trans_tendsto
-      (by simpa [Function.Periodic.qParam] using UpperHalfPlane.qParam_tendsto_atImInfty one_pos))
-        ).comp tendsto_inv_nhdsGT_zero
-    have ht2 : Tendsto (fun t : ℝ ↦ (t : ℂ) ^ 2) (nhdsWithin 0 (Ioi 0)) (nhds 0) := by
-      simpa using ((by fun_prop : Continuous fun t : ℝ ↦ (t : ℂ) ^ 2).tendsto 0).mono_left
-        nhdsWithin_le_nhds
-    have hfg : (fun t : ℝ ↦ (t : ℂ) ^ 2 * (φ₀.resToImagAxis ∘ fun x ↦ x⁻¹) t)
-        =ᶠ[nhdsWithin 0 (Ioi 0)] fun t : ℝ ↦ -(I * t) ^ 2 * φ₀'' (-1 / (I * t)) := by
-      filter_upwards [self_mem_nhdsWithin] with t (ht : 0 < t)
-      rw [Function.comp_apply, neg_sq_mul_φ₀''_neg_inv_I_mul, Function.resToImagAxis_apply,
-        ResToImagAxis, dite_eq_left (inv_pos.mpr ht), φ₀''_def (by simpa using ht), mul_comm]
-      congr 2
-      ext
-      simp [div_eq_mul_inv]
-    simpa [ContinuousWithinAt] using (ht2.mul hφ₀).congr' hfg
-  · -- on `(0, ∞)`, `φ₀''` is continuous on the upper half plane
-    have hI : -1 / (I * t) = I / t := by simp [div_eq_mul_inv, Complex.inv_I, mul_comm]
-    have hmem : -1 / (I * t) ∈ (univ ×ℂ Ioi 0 : Set ℂ) := by simpa [reProdIm, hI] using ht
-    have hf : ContinuousAt (fun t : ℝ ↦ -1 / (I * t)) t :=
-      continuousAt_const.div (by fun_prop) (by simp [ht.ne'])
-    exact ((by fun_prop : ContinuousAt (fun t : ℝ ↦ -(I * t) ^ 2) t).mul
-      ((a.ComplexIntegrands.φ₀''_continuous.continuousAt
-        ((isOpen_univ.reProdIm isOpen_Ioi).mem_nhds hmem)).comp_of_eq hf rfl)).continuousWithinAt
+  · suffices Tendsto (fun t : ℝ ↦ φ₀'' (I / t)) (nhdsWithin 0 (Ioi 0)) (nhds 0) by
+      simp_rw [← continuousWithinAt_Ioi_iff_Ici, neg_sq_mul_φ₀''_neg_inv_I_mul]
+      simpa [ContinuousWithinAt] using this.mul
+        (((continuous_ofReal.pow 2).tendsto 0).mono_left nhdsWithin_le_nhds)
+    refine ((tendsto_resToImagAxis_of_tendsto_atImInfty (φ₀_isBigO_atImInfty.trans_tendsto
+        (by simpa [Function.Periodic.qParam] using
+        UpperHalfPlane.qParam_tendsto_atImInfty one_pos))).comp tendsto_inv_nhdsGT_zero).congr' ?_
+    filter_upwards [self_mem_nhdsWithin] with t (ht : 0 < t)
+    simp [ResToImagAxis, ht, φ₀'', div_eq_mul_inv]
+  · exact ((by fun_prop : Continuous fun t : ℝ ↦ -(I * t) ^ 2).continuousAt.mul
+      (continuousOn_φ₀''_cusp_path.continuousAt (Ioi_mem_nhds ht))).continuousWithinAt
 
 theorem expPoly_φ₀'' (t : ℝ) :
     expPoly 1 (fun k ↦ if k = 0 then 18144 / π ^ 2 else 36 / π ^ 2)
