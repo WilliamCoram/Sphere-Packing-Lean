@@ -5,6 +5,7 @@ Authors: Wenrong Zou
 -/
 module
 
+public import SpherePacking.MagicFunction.AnalyticContinuation
 public import SpherePacking.MagicFunction.b.Schwartz
 
 /-!
@@ -16,7 +17,7 @@ radius `‖x‖²`. We also state the behaviour of `ψ_I(it)` as `t → 0` and `
 
 @[expose] public section
 
-open Set Filter Topology MeasureTheory Real Complex
+open Set Filter Topology MeasureTheory Real Complex MagicFunction.DoubleZeroes Finset
 
 namespace MagicFunction
 
@@ -28,6 +29,11 @@ theorem ψI'_I_mul_isBigO_nhdsGT_zero :
 /-- `ψ_I(it) = O(e^{2πt})` as `t → ∞`. -/
 theorem ψI'_I_mul_isBigO_atTop :
     (fun t : ℝ ↦ ψI' (I * t)) =O[atTop] fun t ↦ rexp (2 * π * t) := by
+  sorry
+
+/-- `t ↦ ψ_I(it)` is locally integrable on `[0, ∞)`. -/
+theorem locallyIntegrableOn_ψI'_I_mul :
+    LocallyIntegrableOn (fun t : ℝ ↦ ψI' (I * t)) (Ici 0) := by
   sorry
 
 theorem integrableOn_ψI'_mul_cexp {s : ℝ} (hr : 2 < s) :
@@ -50,5 +56,14 @@ theorem b_eq_neg_four_mul_I_mul_sin_sq_mul_integral {x : EuclideanSpace ℝ (Fin
 theorem ψI'_I_mul_sub_isBigO_atTop :
     (fun t : ℝ ↦ ψI' (I * t) - (cexp (2 * π * t) + 144)) =O[atTop] fun t ↦ rexp (-π * t) := by
   sorry
+
+theorem expPoly_ψI' (t : ℝ) :
+    expPoly 1 (fun k ↦ if k = 0 then 144 else 1) 0 t = cexp (2 * π * t) + 144 := by
+  simp [sum_range_succ, add_comm]
+
+theorem ψI'_I_mul_sub_expPoly_isBigO_atTop :
+    (fun t : ℝ ↦ ψI' (I * t) - expPoly 1 (fun k ↦ if k = 0 then 144 else 1) 0 t) =O[atTop]
+      fun t ↦ rexp (-π * t) :=
+  ψI'_I_mul_sub_isBigO_atTop.congr_left fun t ↦ by rw [expPoly_ψI']
 
 end MagicFunction
