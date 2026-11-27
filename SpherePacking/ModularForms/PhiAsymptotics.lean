@@ -16,9 +16,9 @@ import SpherePacking.ModularForms.FG
 # Asymptotics of `φ₀`, `φ₋₂`, `φ₋₄` at `i∞`
 
 Writing `q = e^{2πiz}`, we show that as `z → i∞`
-* `φ₀ = O(q)` (`φ₀_isBigO`),
-* `φ₋₂ = 720 + O(q)` (`φ₂'_sub_isBigO`),
-* `φ₋₄ = q⁻¹ + 504 + O(q)` (`φ₄'_sub_isBigO`).
+* `φ₀ = O(q)` (`φ₀_isBigO_atImInfty`),
+* `φ₋₂ = 720 + O(q)` (`φ₂'_sub_isBigO_atImInfty`),
+* `φ₋₄ = q⁻¹ + 504 + O(q)` (`φ₄'_sub_isBigO_atImInfty`).
 
 These are the inputs, via the `S`-transformation `φ₀_S_transform`, to the asymptotic expansion
 `φ₀(i/t) t² = 36/π² e^{2πt} - 8640/π t + 18144/π² + O(t² e^{-2πt})` of the blueprint's
@@ -128,7 +128,7 @@ lemma inv_Δ_isBigO :
   exact exp_isBigO_discriminant.congr_left fun z ↦ by simp [Complex.norm_exp]
 
 /-- `φ₀ = O(q)` at `i∞`. -/
-theorem φ₀_isBigO : φ₀ =O[atImInfty] fun z ↦ cexp (2 * π * I * z) := by
+theorem φ₀_isBigO_atImInfty : φ₀ =O[atImInfty] fun z ↦ cexp (2 * π * I * z) := by
   have hq : Tendsto (fun z : ℍ ↦ cexp (2 * π * I * z)) atImInfty (𝓝 0) := by
     simpa [Function.Periodic.qParam] using qParam_tendsto_atImInfty one_pos
   refine ((?_ : (fun z ↦ (E₂ z * E₄ z - E₆ z) ^ 2) =O[atImInfty]
@@ -140,14 +140,15 @@ theorem φ₀_isBigO : φ₀ =O[atImInfty] fun z ↦ cexp (2 * π * I * z) := by
   simpa [Function.comp_def] using (isLittleO_pow_pow (by norm_num : 1 < 2)).isBigO.comp_tendsto hq
 
 /-- `φ₋₂ = 720 + O(q)` at `i∞`. -/
-theorem φ₂'_sub_isBigO : (fun z ↦ φ₂' z - 720) =O[atImInfty] fun z ↦ cexp (2 * π * I * z) :=
+theorem φ₂'_sub_isBigO_atImInfty :
+    (fun z ↦ φ₂' z - 720) =O[atImInfty] fun z ↦ cexp (2 * π * I * z) :=
   mul_div_sub_isBigO (by simpa [Function.Periodic.qParam] using qParam_tendsto_atImInfty one_pos)
     E₄_sub_isBigO E₆_sub_isBigO E₂_mul_E₄_sub_E₆_sub_isBigO
     (fun z ↦ by simp [congrFun Δ_eq_E₄_cube_sub_E₆_sq z]) ModularForm.discriminant_ne_zero
     inv_Δ_isBigO fun _ ↦ Complex.exp_ne_zero _
 
 /-- `φ₋₄ = q⁻¹ + 504 + O(q)` at `i∞`. -/
-theorem φ₄'_sub_isBigO : (fun z ↦ φ₄' z - (cexp (2 * π * I * z))⁻¹ - 504) =O[atImInfty]
+theorem φ₄'_sub_isBigO_atImInfty : (fun z ↦ φ₄' z - (cexp (2 * π * I * z))⁻¹ - 504) =O[atImInfty]
       fun z ↦ cexp (2 * π * I * z) :=
   sq_div_sub_isBigO (by simpa [Function.Periodic.qParam] using qParam_tendsto_atImInfty one_pos)
     E₄_sub_isBigO E₆_sub_isBigO (fun z ↦ by simp [congrFun Δ_eq_E₄_cube_sub_E₆_sq z])
