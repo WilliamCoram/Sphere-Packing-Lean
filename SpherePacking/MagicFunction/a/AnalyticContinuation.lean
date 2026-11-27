@@ -10,7 +10,7 @@ public import SpherePacking.MagicFunction.a.Schwartz
 
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 import SpherePacking.MagicFunction.a.Integrability.CuspPath
-import SpherePacking.ModularForms.PhiAsymptotics
+import SpherePacking.MagicFunction.a.PhiAsymptotics
 
 /-!
 # Analytic continuation of `a`

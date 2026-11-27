@@ -153,19 +153,6 @@ theorem MLDE_G :
     Δ_eq_H₂_H₃_H₄, ← jacobi_identity]
   ring
 
-/-- `D E₄ = 240 ∑' n : ℕ+, n σ₃ n qⁿ`, by differentiating the `q`-expansion of `E₄` termwise. -/
-theorem DE₄_qexp (z : ℍ) :
-    D E₄.toFun z = 240 * ∑' (n : ℕ+), (n : ℂ) * (σ 3 n : ℂ) * cexp (2 * π * I * n * z) :=
-  D_qexp_const_add_smul (by norm_num) E₄.holo' E₄_sigma_qexp
-    (fun w ↦ by simpa using sigma_qexp_summable_generic 0 3 w)
-    (sigma_qexp_deriv_bound_generic 3) z
-
-/-- `E₂ E₄ - E₆ = 720 ∑' n : ℕ+, n σ₃ n qⁿ` (Ramanujan's formula for `D E₄`). -/
-lemma E₂_mul_E₄_sub_E₆_qexp (z : ℍ) : E₂ z * E₄ z - E₆ z =
-      720 * ∑' (n : ℕ+), (n : ℂ) * (σ 3 n : ℂ) * cexp (2 * π * I * n * z) := by
-  have h : D E₄.toFun z = 3⁻¹ * (E₂ z * E₄ z - E₆ z) := congrFun normalizedDerivOfComplex_E₄ z
-  linear_combination -3 * h + 3 * DE₄_qexp z
-
 /-- `negDE₂ = 24 ∑' n : ℕ+, n σ₁ n qⁿ`, by differentiating the `q`-expansion of `E₂` termwise. -/
 theorem negDE₂_qexp (z : ℍ) :
     negDE₂ z = 24 * ∑' (n : ℕ+), (n : ℂ) * (σ 1 n : ℂ) * cexp (2 * π * I * n * z) := by
@@ -316,16 +303,6 @@ theorem E₂E₄_sub_E₆_div_q_tendsto :
     exact_mod_cast (Nat.mul_le_mul_left _ (ArithmeticFunction.sigma_le_pow_succ 3 _)).trans_eq
       (by ring)
   simpa [h_eq] using (qexp_tendsto_of_poly_bound hbound).const_mul (720 : ℂ)
-
-/-- `E₂ E₄ - E₆ = 720 q + O(q²)` at `i∞`. -/
-lemma E₂_mul_E₄_sub_E₆_sub_isBigO : (fun z : ℍ ↦ E₂ z * E₄ z - E₆ z - 720 * cexp (2 * π * I * z))
-    =O[atImInfty] fun z ↦ cexp (2 * π * I * z) ^ 2 := by
-  refine ((QExp.isBigO_tsum_sub_sum_range (a := fun m ↦ m * σ 3 m)
-    (by simpa using summable_pow_mul_sigma 1 3) 2).const_mul_left 720).congr_left fun z ↦ ?_
-  rw [E₂_mul_E₄_sub_E₆_qexp, tsum_pnat_eq_tsum_of_eq_zero
-    (f := fun n : ℕ ↦ n * σ 3 n * cexp (2 * π * I * n * z)) (by simp)]
-  simp [Finset.sum_range_succ, mul_comm, mul_left_comm]
-  ring
 
 /-- `F(z) / exp(2πi · 2z) → 720²` as `im(z) → ∞`: `F` vanishes to order 2 at `i∞`. -/
 theorem F_vanishing_order : Tendsto (fun z : ℍ ↦ F z / cexp (2 * π * Complex.I * 2 * z))

@@ -42,6 +42,7 @@ public import SpherePacking.MagicFunction.a.IntegralEstimates.I4
 public import SpherePacking.MagicFunction.a.IntegralEstimates.I5
 public import SpherePacking.MagicFunction.a.IntegralEstimates.I6
 public import SpherePacking.MagicFunction.a.Phi
+public import SpherePacking.MagicFunction.a.PhiAsymptotics
 public import SpherePacking.MagicFunction.a.Schwartz
 public import SpherePacking.MagicFunction.a.SpecialValues
 public import SpherePacking.MagicFunction.b.AnalyticContinuation
@@ -66,7 +67,6 @@ public import SpherePacking.ModularForms.JacobiTheta.Defs
 public import SpherePacking.ModularForms.JacobiTheta.Derivative
 public import SpherePacking.ModularForms.JacobiTheta.JacobiIdentity
 public import SpherePacking.ModularForms.JacobiTheta.MDifferentiable
-public import SpherePacking.ModularForms.PhiAsymptotics
 public import SpherePacking.ModularForms.PhiTransform
 public import SpherePacking.ModularForms.QExpansion
 public import SpherePacking.ModularForms.ResToImagAxis

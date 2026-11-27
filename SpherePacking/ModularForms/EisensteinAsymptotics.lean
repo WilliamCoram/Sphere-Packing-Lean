@@ -25,6 +25,7 @@ This file establishes the asymptotic behavior of Eisenstein series and of Serre 
 * `E₄_tendsto_one_atImInfty`, `E₆_tendsto_one_atImInfty` : `E₄, E₆ → 1` at `i∞`
 * `E₄_sub_isBigO`, `E₆_sub_isBigO` : `E₄ = 1 + 240q + 2160q² + O(q³)` and
   `E₆ = 1 - 504q - 16632q² + O(q³)` at `i∞`, where `q = e^{2πiz}`
+* `E₂_mul_E₄_sub_E₆_sub_isBigO` : `E₂E₄ - E₆ = 720q + O(q²)` at `i∞`
 * `serreDerivative_tendsto_of_tendsto` : the limit of `∂ₖ f` at `i∞` from that of `f`
 -/
 
@@ -142,7 +143,7 @@ lemma summable_pow_mul_sigma (j k : ℕ) :
   · calc _ ≤ (m : ℝ) ^ (k + 1) := mod_cast ArithmeticFunction.sigma_le_pow_succ k m
       _ ≤ _ := by gcongr; linarith
 
-/-! ## `q`-expansions of `E₄` and `E₆` to second order -/
+/-! ## Low-order `q`-expansions of `E₄`, `E₆` and `E₂E₄ - E₆` -/
 
 /-- `E₄ = 1 + 240 q + 2160 q² + O(q³)` at `i∞`. -/
 lemma E₄_sub_isBigO : (fun z : ℍ ↦ E₄ z - (1 + 240 * cexp (2 * π * I * z) +
@@ -165,4 +166,14 @@ lemma E₆_sub_isBigO : (fun z : ℍ ↦ E₆ z - (1 - 504 * cexp (2 * π * I * 
     (f := fun n : ℕ ↦ σ 5 n * cexp (2 * π * I * n * z)) (by simp)]
   simp [Finset.sum_range_succ, ← Complex.exp_natCast_mul, show σ 5 2 = 33 by decide, mul_comm,
     mul_left_comm]
+  ring
+
+/-- `E₂ E₄ - E₆ = 720 q + O(q²)` at `i∞`. -/
+lemma E₂_mul_E₄_sub_E₆_sub_isBigO : (fun z : ℍ ↦ E₂ z * E₄ z - E₆ z - 720 * cexp (2 * π * I * z))
+    =O[atImInfty] fun z ↦ cexp (2 * π * I * z) ^ 2 := by
+  refine ((QExp.isBigO_tsum_sub_sum_range (a := fun m ↦ m * σ 3 m)
+    (by simpa using summable_pow_mul_sigma 1 3) 2).const_mul_left 720).congr_left fun z ↦ ?_
+  rw [E₂_mul_E₄_sub_E₆_qexp, tsum_pnat_eq_tsum_of_eq_zero
+    (f := fun n : ℕ ↦ n * σ 3 n * cexp (2 * π * I * n * z)) (by simp)]
+  simp [Finset.sum_range_succ, mul_comm, mul_left_comm]
   ring
