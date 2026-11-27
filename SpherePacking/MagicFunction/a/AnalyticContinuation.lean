@@ -35,53 +35,22 @@ theorem φ₀''_I_div_mul_sq_sub_isBigO_atTop :
       F.resToImagAxis =O[atTop] fun t ↦ rexp (-(2 * π) * t) :=
     isBigO_resToImagAxis_of_isBigO_atImInfty (by positivity)
       (hF.norm_right.congr_right fun z ↦ by simp [Complex.norm_exp])
-  have h12 : (fun t : ℝ ↦ t) =O[atTop] fun t ↦ t ^ 2 := by
-    simpa using (Asymptotics.isLittleO_pow_pow_atTop_of_lt (𝕜 := ℝ) (by norm_num : 1 < 2)).isBigO
-  have h02 : (fun _ : ℝ ↦ (1 : ℝ)) =O[atTop] fun t ↦ t ^ 2 := by
-    simpa using (Asymptotics.isLittleO_pow_pow_atTop_of_lt (𝕜 := ℝ) (by norm_num : 0 < 2)).isBigO
-  have hA : (fun t : ℝ ↦ (t : ℂ) ^ 2 * φ₀.resToImagAxis t) =O[atTop]
-      fun t ↦ t ^ 2 * rexp (-(2 * π) * t) :=
-    (Asymptotics.isBigO_of_le _ fun t ↦ by simp).mul (hres _ φ₀_isBigO)
-  have hB : (fun t : ℝ ↦ (t : ℂ) * (fun z ↦ φ₂' z - 720).resToImagAxis t) =O[atTop]
-      fun t ↦ t ^ 2 * rexp (-(2 * π) * t) :=
-    ((Asymptotics.isBigO_of_le _ fun t ↦ by simp).trans h12).mul
-      (hres _ φ₂'_sub_isBigO)
-  have hC : (fun z ↦ φ₄' z - (cexp (2 * π * I * z))⁻¹ - 504).resToImagAxis =O[atTop]
-      fun t ↦ t ^ 2 * rexp (-(2 * π) * t) :=
-    (hres _ φ₄'_sub_isBigO).trans
-      ((h02.mul (Asymptotics.isBigO_refl _ _)).congr_left fun t ↦ one_mul _)
-  refine ((hA.sub (hB.const_mul_left (12 / π : ℂ))).add
-    (hC.const_mul_left (36 / π ^ 2 : ℂ))).congr' ?_ (.of_forall fun t ↦ by ring_nf)
+  have hpow {k : ℕ} (hk : k ≤ 2) : (fun t : ℝ ↦ (t : ℂ) ^ k) =O[atTop] fun t ↦ t ^ 2 :=
+    (Asymptotics.isBigO_of_le _ fun t ↦ by simp).trans
+      ((Asymptotics.isBigO_pow_pow_cobounded_of_le hk).mono IsOrderBornology.atTop_le_cobounded)
+  refine ((((hpow le_rfl).mul (hres _ φ₀_isBigO)).sub
+    (((hpow one_le_two).mul (hres _ φ₂'_sub_isBigO)).const_mul_left (12 / π : ℂ))).add
+      (((hpow zero_le_two).mul (hres _ φ₄'_sub_isBigO)).const_mul_left (36 / π ^ 2 : ℂ))).congr'
+        ?_ (.of_forall fun t ↦ by ring_nf)
   filter_upwards [eventually_gt_atTop 0] with t ht
-  have hz : 0 < (I * (t : ℂ)).im := by simp [ht]
-  have hres_eq (F : UpperHalfPlane → ℂ) : F.resToImagAxis t = F ⟨I * t, hz⟩ :=
-    (ResToImagAxis.I_mul_t_eq F t ht).symm
-  have hq : (cexp (2 * π * I * (I * t)))⁻¹ = cexp (2 * π * t) := by
-    rw [← Complex.exp_neg]
-    congr 1
-    linear_combination -(2 * π * t : ℂ) * I_sq
-  have hφ₀ : φ₀'' (I / t) = φ₀ ⟨I * t, hz⟩ - 12 * I / (π * (I * t)) * φ₂' ⟨I * t, hz⟩ -
-      36 / (π ^ 2 * (I * t) ^ 2) * φ₄' ⟨I * t, hz⟩ := by
-    have hS := φ₀_S_transform ⟨I * t, hz⟩
-    rw [← ResToImagAxis.one_div_eq_S_smul φ₀ ht] at hS
-    simp only at hS
-    rw [← hS, Function.resToImagAxis_apply, ResToImagAxis, dite_eq_left (one_div_pos.mpr ht),
-      φ₀''_def (by simpa using ht)]
-    congr 1
-    ext
-    simp [div_eq_mul_inv]
-  rw [hres_eq, hres_eq, hres_eq, hφ₀]
-  simp only [hq]
-  generalize φ₀ ⟨I * t, hz⟩ = a, φ₂' ⟨I * t, hz⟩ = b, φ₄' ⟨I * t, hz⟩ = c
-  have hπ : (π : ℂ) ≠ 0 := ofReal_ne_zero.mpr pi_ne_zero
-  have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.mpr ht.ne'
-  have e1 : 12 * I / (π * (I * t)) = 12 / (π * t) := by field_simp
-  have e2 : (36 : ℂ) / (π ^ 2 * (I * t) ^ 2) = -36 / (π ^ 2 * t ^ 2) := by
-    rw [mul_pow, I_sq]
-    field_simp
-  rw [e1, e2]
-  field_simp
-  ring
+  have hS : φ₀'' (I / t) = φ₀ (ModularGroup.S • ⟨I * t, by simpa using ht⟩) := by
+    rw [φ₀''_def (by simpa using ht), UpperHalfPlane.modular_S_smul]
+    congr
+    simp [div_eq_mul_inv, mul_comm]
+  simp only [Function.resToImagAxis_apply, ResToImagAxis, ht, dite_true, hS, φ₀_S_transform]
+  rw [show (cexp (2 * π * I * (I * t)))⁻¹ = cexp (2 * π * t) by
+    rw [← Complex.exp_neg]; congr; linear_combination -(2 * π * t : ℂ) * I_sq]
+  grind [ofReal_ne_zero.mpr ht.ne', I_sq]
 
 /-- `ψ(it) = t² φ₀(i/t)` for `ψ(z) = -z² φ₀(-1/z)`. -/
 theorem neg_sq_mul_φ₀''_neg_inv_I_mul (t : ℝ) :
