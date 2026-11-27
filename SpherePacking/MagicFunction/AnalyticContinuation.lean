@@ -97,12 +97,13 @@ theorem analyticOnNhd_U (hC : 0 < C)
     (hloc : LocallyIntegrableOn (fun t : ℝ ↦ ψ (I * t)) (Ici 0))
     (hexp : (fun t : ℝ ↦ ψ (I * t) - expPoly n a b t) =O[atTop] fun t ↦ rexp (-C * t)) :
     AnalyticOnNhd ℂ (U ψ n a b) {s | -C / π < s.re} := by
+  have h : Differentiable ℂ fun s : ℂ ↦ sin (π * s / 2) := by fun_prop
   have (k : ℕ) : Differentiable ℂ (dslope (fun s : ℂ ↦ sin (π * s / 2)) (2 * k)) :=
     differentiableOn_univ.mp <| (Complex.differentiableOn_dslope univ_mem).mpr <|
-      (by fun_prop : Differentiable ℂ fun s : ℂ ↦ sin (π * s / 2)).differentiableOn
+      h.differentiableOn
   refine DifferentiableOn.analyticOnNhd (.add (Differentiable.differentiableOn
     (Differentiable.fun_sum (by fun_prop))) ?_) (isOpen_lt continuous_const continuous_re)
-  exact (by fun_prop : Differentiable ℂ fun s : ℂ ↦ sin (π * s / 2) ^ 2).differentiableOn.mul
+  exact h.differentiableOn.mul
     (analyticOnNhd_integral_sub_expPoly hC hloc hexp).differentiableOn
 
 /-- `U` is the continuation of `sin(πs/2)^2 W(s)`: they agree where the integral converges. -/
